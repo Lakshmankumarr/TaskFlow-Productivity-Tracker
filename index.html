@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>
+        TaskFlow Productivity Tracker v2
+    </title>
+
+    <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+    <link
+    rel="stylesheet"
+    href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+
+    <header class="header">
+
+        <h1>
+            TaskFlow
+        </h1>
+
+        <p>
+            Productivity Tracker v2
+        </p>
+
+    </header>
+
+    <!-- Statistics -->
+
+    <section class="stats">
+
+        <div class="card">
+
+            <h3>Total Tasks</h3>
+
+            <span id="totalTasks">
+                0
+            </span>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Completed</h3>
+
+            <span id="completedTasks">
+                0
+            </span>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Pending</h3>
+
+            <span id="pendingTasks">
+                0
+            </span>
+
+        </div>
+
+        <div class="card">
+
+            <h3>🔥 Streak</h3>
+
+            <span id="streakCount">
+                0
+            </span>
+
+        </div>
+
+    </section>
+
+    <!-- Achievements -->
+
+    <section class="badges-section">
+
+        <h2>
+            Achievements
+        </h2>
+
+        <div id="badgesContainer">
+
+        </div>
+
+    </section>
+
+    <!-- Task Form -->
+
+    <section class="task-form">
+
+        <input
+        type="text"
+        id="taskInput"
+        placeholder="Enter task title">
+
+        <button
+        id="addBtn">
+
+            Add Task
+
+        </button>
+
+    </section>
+
+    <!-- Task List -->
+
+    <section
+    id="taskContainer"
+    class="task-container">
+
+    </section>
+
+    <!-- Empty State -->
+
+    <section
+    id="emptyState"
+    class="empty-state">
+
+        <h2>
+            No Tasks Yet
+        </h2>
+
+        <p>
+            Create your first task for today.
+        </p>
+
+    </section>
+
+    <section class="calendar-section">
+
+        
+
+    <h2>
+        Activity Calendar
+    </h2>
+
+    <div id="calendarContainer">
+
+    </div>
+
+   </section>
+
+    <!-- History -->
+
+    <section class="history-section">
+
+        <h2>
+            Task History
+        </h2>
+
+        <div
+        id="historyContainer">
+
+        </div>
+
+    </section>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
