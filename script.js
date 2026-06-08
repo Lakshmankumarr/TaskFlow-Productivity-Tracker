@@ -52,6 +52,16 @@ document.getElementById(
     "streakCount"
 );
 
+const lifetimeTasks =
+document.getElementById(
+    "lifetimeTasks"
+);
+
+const lifetimeCompleted =
+document.getElementById(
+    "lifetimeCompleted"
+);
+
 /* ===================================
    DATE
 =================================== */
@@ -91,12 +101,20 @@ if(!appData)
 
         totalCompletedTasks: 0,
 
-        activityDates: []
+        activityDates: [],
+
+        lifetimeTasks: 0,
+
+        lifetimeCompleted: 0
 
     };
 
     saveData();
 }
+
+/* ===================================
+   SAFETY CHECKS
+=================================== */
 
 /* ===================================
    SAFETY CHECKS
@@ -116,6 +134,13 @@ appData.streak || 0;
 
 appData.activityDates =
 appData.activityDates || [];
+
+/* ADD THESE TWO LINES */
+
+appData.lifetimeTasks ??= 0;
+
+appData.lifetimeCompleted ??= 0;
+
 
 /* ===================================
    STORAGE
@@ -354,6 +379,14 @@ function updateStats()
 
     streakCount.textContent =
     appData.streak;
+
+
+
+    lifetimeTasks.textContent =
+    appData.lifetimeTasks;
+
+    lifetimeCompleted.textContent =
+    appData.lifetimeCompleted;
 }
 
 /* ===================================
@@ -394,6 +427,7 @@ function addTask()
     appData.tasks.push(
         task
     );
+    appData.lifetimeTasks++;
     if(
     !appData.activityDates.includes(
         today
@@ -434,6 +468,8 @@ function toggleTask(id)
             )
             {
                 appData.totalCompletedTasks++;
+
+                appData.lifetimeCompleted++;
             }
 
             return {
