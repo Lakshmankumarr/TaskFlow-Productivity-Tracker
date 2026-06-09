@@ -2,286 +2,153 @@
    DOM ELEMENTS
 =================================== */
 
-const taskInput =
-document.getElementById(
-    "taskInput"
-);
-
-const addBtn =
-document.getElementById(
-    "addBtn"
-);
-
-const taskContainer =
-document.getElementById(
-    "taskContainer"
-);
-
-const emptyState =
-document.getElementById(
-    "emptyState"
-);
-
-const historyContainer =
-document.getElementById(
-    "historyContainer"
-);
-
-const badgesContainer =
-document.getElementById(
-    "badgesContainer"
-);
-
-const totalTasks =
-document.getElementById(
-    "totalTasks"
-);
-
-const completedTasks =
-document.getElementById(
-    "completedTasks"
-);
-
-const pendingTasks =
-document.getElementById(
-    "pendingTasks"
-);
-
-const streakCount =
-document.getElementById(
-    "streakCount"
-);
-
-const lifetimeTasks =
-document.getElementById(
-    "lifetimeTasks"
-);
-
-const lifetimeCompleted =
-document.getElementById(
-    "lifetimeCompleted"
-);
+const taskInput = document.getElementById("taskInput");
+const addBtn = document.getElementById("addBtn");
+const taskContainer = document.getElementById("taskContainer");
+const emptyState = document.getElementById("emptyState");
+const historyContainer = document.getElementById("historyContainer");
+const badgesContainer = document.getElementById("badgesContainer");
+const totalTasks = document.getElementById("totalTasks");
+const completedTasks = document.getElementById("completedTasks");
+const pendingTasks = document.getElementById("pendingTasks");
+const streakCount = document.getElementById("streakCount");
+const lifetimeTasks = document.getElementById("lifetimeTasks");
+const lifetimeCompleted = document.getElementById("lifetimeCompleted");
 
 /* ===================================
    DATE
 =================================== */
 
-const today =
-new Date()
-.toLocaleDateString();
+const today = new Date().toLocaleDateString();
 
 /* ===================================
    APPLICATION DATA
 =================================== */
 
-let appData =
-JSON.parse(
-    localStorage.getItem(
-        "taskflow"
-    )
-);
+let appData = JSON.parse(localStorage.getItem("taskflow"));
 
 /* ===================================
    INITIAL DATA
 =================================== */
 
-if(!appData)
-{
+if (!appData) {
     appData = {
-
         date: today,
-
         tasks: [],
-
         history: [],
-
         streak: 0,
-
         badges: [],
-
         totalCompletedTasks: 0,
-
         activityDates: [],
-
         lifetimeTasks: 0,
-
         lifetimeCompleted: 0
-
     };
-
     saveData();
 }
 
 /* ===================================
-   SAFETY CHECKS
+   SAFETY CHECKS - FIXED
 =================================== */
 
-/* ===================================
-   SAFETY CHECKS
-=================================== */
-
-appData.history =
-appData.history || [];
-
-appData.badges =
-appData.badges || [];
-
-appData.totalCompletedTasks =
-appData.totalCompletedTasks || 0;
-
-appData.streak =
-appData.streak || 0;
-
-appData.activityDates =
-appData.activityDates || [];
-
-/* ADD THESE TWO LINES */
-
+appData.history = appData.history || [];
+appData.badges = appData.badges || [];
+appData.totalCompletedTasks = appData.totalCompletedTasks || 0;
+appData.streak = appData.streak || 0;
+appData.activityDates = appData.activityDates || [];
 appData.lifetimeTasks ??= 0;
-
 appData.lifetimeCompleted ??= 0;
 
+/* ===================================
+   UTILITY - INPUT SANITIZATION
+=================================== */
+
+/**
+ * Sanitize user input to prevent XSS attacks
+ * @param {string} input - Raw user input
+ * @returns {string} Sanitized text
+ */
+function sanitizeInput(input) {
+    const div = document.createElement("div");
+    div.textContent = input;
+    return div.innerHTML;
+}
 
 /* ===================================
    STORAGE
 =================================== */
 
-function saveData()
-{
-    localStorage.setItem(
-        "taskflow",
-        JSON.stringify(
-            appData
-        )
-    );
+function saveData() {
+    try {
+        localStorage.setItem("taskflow", JSON.stringify(appData));
+    } catch (error) {
+        console.error("Error saving data to localStorage:", error);
+        alert("Failed to save your data. Your browser storage might be full.");
+    }
 }
 
 /* ===================================
    DAILY RESET + ARCHIVE
 =================================== */
 
-if(appData.date !== today)
-{
-    const completedCount =
-    appData.tasks.filter(
-        task => task.completed
-    ).length;
+function checkAndResetDaily() {
+    if (appData.date !== today) {
+        const completedCount = appData.tasks.filter(task => task.completed).length;
 
-    if(completedCount > 0)
-    {
-        appData.streak++;
+        if (completedCount > 0) {
+            appData.streak++;
 
-        if(
-            !appData.activityDates.includes(
-                appData.date
-            )
-        )
-        {
-            appData.activityDates.push(
-                appData.date
-            );
+            if (!appData.activityDates.includes(appData.date)) {
+                appData.activityDates.push(appData.date);
+            }
+        } else {
+            appData.streak = 0;
         }
+
+        appData.history.push({
+            date: appData.date,
+            totalTasks: appData.tasks.length,
+            completedTasks: completedCount,
+            streak: appData.streak
+        });
+
+        appData.date = today;
+        appData.tasks = [];
+
+        updateBadges();
+        saveData();
     }
-    else
-    {
-        appData.streak = 0;
-    }
-
-    appData.history.push({
-
-        date:
-        appData.date,
-
-        totalTasks:
-        appData.tasks.length,
-
-        completedTasks:
-        completedCount,
-
-        streak:
-        appData.streak
-
-    });
-
-    appData.date = today;
-
-    appData.tasks = [];
-
-    updateBadges();
-
-    saveData();
 }
+
+checkAndResetDaily();
 
 /* ===================================
    BADGE SYSTEM
 =================================== */
 
-function updateBadges()
-{
-    const badges =
-    appData.badges;
+/**
+ * Update badges based on achievements
+ */
+function updateBadges() {
+    const badges = appData.badges;
+    const total = appData.totalCompletedTasks;
 
-    const total =
-    appData.totalCompletedTasks;
+    // Badge milestones
+    const badgeMilestones = [
+        { name: "Bronze", threshold: 50 },
+        { name: "Silver", threshold: 100 },
+        { name: "Gold", threshold: 500 },
+        { name: "Platinum", threshold: 1000 }
+    ];
 
-    if(
-        total >= 50 &&
-        !badges.includes(
-            "Bronze"
-        )
-    )
-    {
-        badges.push(
-            "Bronze"
-        );
-    }
+    badgeMilestones.forEach(({ name, threshold }) => {
+        if (total >= threshold && !badges.includes(name)) {
+            badges.push(name);
+        }
+    });
 
-    if(
-        total >= 100 &&
-        !badges.includes(
-            "Silver"
-        )
-    )
-    {
-        badges.push(
-            "Silver"
-        );
-    }
-
-    if(
-        total >= 500 &&
-        !badges.includes(
-            "Gold"
-        )
-    )
-    {
-        badges.push(
-            "Gold"
-        );
-    }
-
-    if(
-        total >= 1000 &&
-        !badges.includes(
-            "Platinum"
-        )
-    )
-    {
-        badges.push(
-            "Platinum"
-        );
-    }
-
-    if(
-        appData.streak >= 7 &&
-        !badges.includes(
-            "Daily Warrior"
-        )
-    )
-    {
-        badges.push(
-            "Daily Warrior"
-        );
+    // Streak badge
+    if (appData.streak >= 7 && !badges.includes("Daily Warrior")) {
+        badges.push("Daily Warrior");
     }
 }
 
@@ -289,68 +156,30 @@ function updateBadges()
    BADGE RENDERING
 =================================== */
 
-function renderBadges()
-{
-    badgesContainer.innerHTML =
-    "";
+/**
+ * Render achievement badges
+ */
+function renderBadges() {
+    badgesContainer.innerHTML = "";
 
-    if(
-        appData.badges.length === 0
-    )
-    {
-        badgesContainer.innerHTML =
-
-        `
-        <div class="badge">
-            No Badges Yet
-        </div>
-        `;
-
+    if (appData.badges.length === 0) {
+        badgesContainer.innerHTML = `<div class="badge">🚀 No Badges Yet</div>`;
         return;
     }
 
-    appData.badges.forEach(
-    badge => {
+    const badgeEmojis = {
+        "Bronze": "🥉",
+        "Silver": "🥈",
+        "Gold": "🥇",
+        "Platinum": "💎",
+        "Daily Warrior": "🏆"
+    };
 
-        const div =
-        document.createElement(
-            "div"
-        );
-
-        div.classList.add(
-            "badge"
-        );
-
-        switch(badge)
-        {
-            case "Bronze":
-                div.textContent =
-                "🥉 Bronze";
-                break;
-
-            case "Silver":
-                div.textContent =
-                "🥈 Silver";
-                break;
-
-            case "Gold":
-                div.textContent =
-                "🥇 Gold";
-                break;
-
-            case "Platinum":
-                div.textContent =
-                "💎 Platinum";
-                break;
-
-            case "Daily Warrior":
-                div.textContent =
-                "🏆 Daily Warrior";
-                break;
-        }
-
-        badgesContainer
-        .appendChild(div);
+    appData.badges.forEach(badge => {
+        const div = document.createElement("div");
+        div.classList.add("badge");
+        div.textContent = `${badgeEmojis[badge]} ${badge}`;
+        badgesContainer.appendChild(div);
     });
 }
 
@@ -358,137 +187,86 @@ function renderBadges()
    DASHBOARD STATS
 =================================== */
 
-function updateStats()
-{
-    const total =
-    appData.tasks.length;
+/**
+ * Update dashboard statistics
+ */
+function updateStats() {
+    const total = appData.tasks.length;
+    const completed = appData.tasks.filter(task => task.completed).length;
 
-    const completed =
-    appData.tasks.filter(
-        task => task.completed
-    ).length;
-
-    totalTasks.textContent =
-    total;
-
-    completedTasks.textContent =
-    completed;
-
-    pendingTasks.textContent =
-    total - completed;
-
-    streakCount.textContent =
-    appData.streak;
-
-
-
-    lifetimeTasks.textContent =
-    appData.lifetimeTasks;
-
-    lifetimeCompleted.textContent =
-    appData.lifetimeCompleted;
+    totalTasks.textContent = total;
+    completedTasks.textContent = completed;
+    pendingTasks.textContent = total - completed;
+    streakCount.textContent = appData.streak;
+    lifetimeTasks.textContent = appData.lifetimeTasks;
+    lifetimeCompleted.textContent = appData.lifetimeCompleted;
 }
 
 /* ===================================
    ADD TASK
 =================================== */
 
-function addTask()
-{
-    const title =
-    taskInput.value.trim();
+/**
+ * Add a new task to the list
+ */
+function addTask() {
+    const title = taskInput.value.trim();
 
-    if(title === "")
-    {
-        alert(
-            "Please enter a task."
-        );
+    if (title === "") {
+        alert("Please enter a task.");
+        return;
+    }
 
+    if (title.length > 200) {
+        alert("Task title must be less than 200 characters.");
         return;
     }
 
     const task = {
-
-        id:
-        Date.now(),
-
-        title:
-        title,
-
-        completed:
-        false,
-
-        createdAt:
-        new Date()
-        .toLocaleString()
-
+        id: Date.now(),
+        title: sanitizeInput(title),
+        completed: false,
+        createdAt: new Date().toLocaleString()
     };
 
-    appData.tasks.push(
-        task
-    );
+    appData.tasks.push(task);
     appData.lifetimeTasks++;
-    if(
-    !appData.activityDates.includes(
-        today
-    )
-    )
-    {
-    appData.activityDates.push(
-        today
-    );
+
+    if (!appData.activityDates.includes(today)) {
+        appData.activityDates.push(today);
     }
 
     saveData();
-
     renderCalendar();
-
     renderTasks();
-
     taskInput.value = "";
+    taskInput.focus();
 }
 
 /* ===================================
-   COMPLETE / UNDO TASK
+   COMPLETE / UNDO TASK - FIXED
 =================================== */
 
-function toggleTask(id)
-{
-    appData.tasks =
-    appData.tasks.map(task => {
+/**
+ * Toggle task completion status
+ * Fixed: Was comparing completed state incorrectly
+ */
+function toggleTask(id) {
+    const task = appData.tasks.find(t => t.id === id);
 
-        if(task.id === id)
-        {
-            const newCompleted =
-            !task.completed;
+    if (!task) return;
 
-            if(
-                newCompleted &&
-                !task.completed
-            )
-            {
-                appData.totalCompletedTasks++;
+    const wasCompleted = task.completed;
+    task.completed = !task.completed;
 
-                appData.lifetimeCompleted++;
-            }
-
-            return {
-
-                ...task,
-
-                completed:
-                newCompleted
-
-            };
-        }
-
-        return task;
-    });
+    // Only increment counters when completing a task (not when undoing)
+    if (task.completed && !wasCompleted) {
+        appData.totalCompletedTasks++;
+        appData.lifetimeCompleted++;
+    }
 
     updateBadges();
-
     saveData();
-
     renderTasks();
 }
 
@@ -496,230 +274,115 @@ function toggleTask(id)
    DELETE TASK
 =================================== */
 
-function deleteTask(id)
-{
-    const confirmDelete =
-    confirm(
-        "Delete this task?"
-    );
+/**
+ * Delete a task from the list
+ */
+function deleteTask(id) {
+    const confirmed = confirm("Are you sure you want to delete this task?");
 
-    if(!confirmDelete)
-    {
-        return;
+    if (!confirmed) return;
+
+    const initialLength = appData.tasks.length;
+    appData.tasks = appData.tasks.filter(task => task.id !== id);
+
+    if (appData.tasks.length < initialLength) {
+        saveData();
+        renderTasks();
     }
-
-    appData.tasks =
-    appData.tasks.filter(
-        task =>
-        task.id !== id
-    );
-
-    saveData();
-
-    renderTasks();
 }
 
 /* ===================================
    EDIT TASK
 =================================== */
 
-function editTask(id)
-{
-    const task =
-    appData.tasks.find(
-        task =>
-        task.id === id
-    );
+/**
+ * Edit an existing task
+ */
+function editTask(id) {
+    const task = appData.tasks.find(t => t.id === id);
 
-    if(!task)
-    {
+    if (!task) return;
+
+    const updatedTitle = prompt("Update task title:", task.title);
+
+    if (updatedTitle === null) return;
+
+    const cleanedTitle = updatedTitle.trim();
+
+    if (cleanedTitle === "") {
+        alert("Task title cannot be empty.");
         return;
     }
 
-    const updatedTitle =
-    prompt(
-        "Update task title:",
-        task.title
-    );
-
-    if(
-        updatedTitle === null
-    )
-    {
+    if (cleanedTitle.length > 200) {
+        alert("Task title must be less than 200 characters.");
         return;
     }
 
-    const cleanedTitle =
-    updatedTitle.trim();
-
-    if(cleanedTitle === "")
-    {
-        alert(
-            "Task title cannot be empty."
-        );
-
-        return;
-    }
-
-    appData.tasks =
-    appData.tasks.map(task => {
-
-        if(task.id === id)
-        {
-            return {
-
-                ...task,
-
-                title:
-                cleanedTitle
-
-            };
-        }
-
-        return task;
-
-    });
-
+    task.title = sanitizeInput(cleanedTitle);
     saveData();
-
     renderTasks();
 }
 
 /* ===================================
-   TASK RENDERING
+   TASK RENDERING - OPTIMIZED
 =================================== */
 
-function renderTasks()
-{
-    taskContainer.innerHTML =
-    "";
+/**
+ * Render all tasks to the DOM
+ * Optimized with documentFragment and improved structure
+ */
+function renderTasks() {
+    taskContainer.innerHTML = "";
 
-    if(
-        appData.tasks.length === 0
-    )
-    {
-        emptyState.style.display =
-        "block";
-
+    if (appData.tasks.length === 0) {
+        emptyState.style.display = "block";
         updateStats();
-
         renderBadges();
-
         return;
     }
 
-    emptyState.style.display =
-    "none";
+    emptyState.style.display = "none";
+
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
 
     appData.tasks.forEach(task => {
+        const taskDiv = document.createElement("div");
+        taskDiv.classList.add("task");
 
-        const taskDiv =
-        document.createElement(
-            "div"
-        );
-
-        taskDiv.classList.add(
-            "task"
-        );
-
-        if(task.completed)
-        {
-            taskDiv.classList.add(
-                "completed"
-            );
+        if (task.completed) {
+            taskDiv.classList.add("completed");
         }
 
-        taskDiv.innerHTML =
+        const statusClass = task.completed ? "completed" : "pending";
+        const statusText = task.completed ? "✅ Completed" : "⏳ Pending";
+        const buttonText = task.completed ? "Undo" : "Complete";
 
-        `
-        <div class="task-top">
-
-            <h3>
-                ${task.title}
-            </h3>
-
-        </div>
-
-        <p class="task-date">
-
-            Created:
-
-            ${task.createdAt}
-
-        </p>
-
-        <p
-        class="status ${
-            task.completed
-            ?
-            "completed"
-            :
-            "pending"
-        }">
-
-            ${
-                task.completed
-                ?
-                "Completed"
-                :
-                "Pending"
-            }
-
-        </p>
-
-        <div
-        class="task-actions">
-
-            <button
-            class="complete-btn"
-            onclick="
-            toggleTask(
-            ${task.id}
-            )">
-
-                ${
-                    task.completed
-                    ?
-                    "Undo"
-                    :
-                    "Complete"
-                }
-
-            </button>
-
-            <button
-            class="edit-btn"
-            onclick="
-            editTask(
-            ${task.id}
-            )">
-
-                Edit
-
-            </button>
-
-            <button
-            class="delete-btn"
-            onclick="
-            deleteTask(
-            ${task.id}
-            )">
-
-                Delete
-
-            </button>
-
-        </div>
+        taskDiv.innerHTML = `
+            <div class="task-top">
+                <h3>${task.title}</h3>
+            </div>
+            <p class="task-date">Created: ${task.createdAt}</p>
+            <p class="status ${statusClass}">${statusText}</p>
+            <div class="task-actions">
+                <button class="complete-btn" onclick="toggleTask(${task.id})" aria-label="${buttonText} task">
+                    ${buttonText}
+                </button>
+                <button class="edit-btn" onclick="editTask(${task.id})" aria-label="Edit task">
+                    Edit
+                </button>
+                <button class="delete-btn" onclick="deleteTask(${task.id})" aria-label="Delete task">
+                    Delete
+                </button>
+            </div>
         `;
 
-        taskContainer
-        .appendChild(
-            taskDiv
-        );
+        fragment.appendChild(taskDiv);
     });
 
+    taskContainer.appendChild(fragment);
     updateStats();
-
     renderBadges();
 }
 
@@ -727,170 +390,93 @@ function renderTasks()
    HISTORY RENDERING
 =================================== */
 
-function renderHistory()
-{
-    historyContainer.innerHTML =
-    "";
+/**
+ * Render task history
+ */
+function renderHistory() {
+    historyContainer.innerHTML = "";
 
-    if(
-        appData.history.length === 0
-    )
-    {
-        historyContainer.innerHTML =
-
-        `
-        <div class="history-card">
-
-            No history available yet.
-
-        </div>
-        `;
-
+    if (appData.history.length === 0) {
+        historyContainer.innerHTML = `<div class="history-card">📊 No history available yet.</div>`;
         return;
     }
 
+    const fragment = document.createDocumentFragment();
+
     appData.history
-    .slice()
-    .reverse()
-    .forEach(day => {
+        .slice()
+        .reverse()
+        .forEach(day => {
+            const historyCard = document.createElement("div");
+            historyCard.classList.add("history-card");
 
-        const historyCard =
-        document.createElement(
-            "div"
-        );
+            historyCard.innerHTML = `
+                <h3>${day.date}</h3>
+                <p>📋 Total Tasks: <strong>${day.totalTasks}</strong></p>
+                <p>✅ Completed: <strong>${day.completedTasks}</strong></p>
+                <p>🔥 Streak: <strong>${day.streak}</strong></p>
+            `;
 
-        historyCard.classList.add(
-            "history-card"
-        );
+            fragment.appendChild(historyCard);
+        });
 
-        historyCard.innerHTML =
-
-        `
-        <h3>
-            ${day.date}
-        </h3>
-
-        <p>
-            Total Tasks:
-            ${day.totalTasks}
-        </p>
-
-        <p>
-            Completed Tasks:
-            ${day.completedTasks}
-        </p>
-
-        <p>
-            🔥 Streak:
-            ${day.streak}
-        </p>
-        `;
-
-        historyContainer
-        .appendChild(
-            historyCard
-        );
-
-    });
+    historyContainer.appendChild(fragment);
 }
 
 /* ===================================
    CALENDAR RENDERING
 =================================== */
 
-function renderCalendar()
-{
-    const container =
-    document.getElementById(
-        "calendarContainer"
-    );
+/**
+ * Render activity calendar
+ */
+function renderCalendar() {
+    const container = document.getElementById("calendarContainer");
 
-    if(!container)
-    {
-        return;
-    }
+    if (!container) return;
 
-    container.innerHTML =
-    "";
+    container.innerHTML = "";
 
-    const now =
-    new Date();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    const year =
-    now.getFullYear();
+    const fragment = document.createDocumentFragment();
 
-    const month =
-    now.getMonth();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const div = document.createElement("div");
+        div.classList.add("day");
 
-    const daysInMonth =
-    new Date(
-        year,
-        month + 1,
-        0
-    ).getDate();
+        const dateString = new Date(year, month, day).toLocaleDateString();
 
-    for(
-        let day = 1;
-        day <= daysInMonth;
-        day++
-    )
-    {
-        const div =
-        document.createElement(
-            "div"
-        );
-
-        div.classList.add(
-            "day"
-        );
-
-        const dateString =
-        new Date(
-            year,
-            month,
-            day
-        ).toLocaleDateString();
-
-        if(
-            appData.activityDates.includes(
-                dateString
-            )
-        )
-        {
-            div.classList.add(
-                "active-day"
-            );
-        }
-        else
-        {
-            div.classList.add(
-                "inactive-day"
-            );
+        if (appData.activityDates.includes(dateString)) {
+            div.classList.add("active-day");
+            div.setAttribute("aria-label", `Active day: ${day}`);
+        } else {
+            div.classList.add("inactive-day");
+            div.setAttribute("aria-label", `Inactive day: ${day}`);
         }
 
-        div.textContent =
-        day;
-
-        container.appendChild(
-            div
-        );
+        div.textContent = day;
+        fragment.appendChild(div);
     }
+
+    container.appendChild(fragment);
 }
 
 /* ===================================
    REFRESH UI
 =================================== */
 
-function refreshUI()
-{
+/**
+ * Refresh all UI components
+ */
+function refreshUI() {
     renderTasks();
-
     renderHistory();
-
     renderBadges();
-
     renderCalendar();
-
     updateStats();
 }
 
@@ -898,24 +484,13 @@ function refreshUI()
    EVENT LISTENERS
 =================================== */
 
-addBtn.addEventListener(
-    "click",
-    addTask
-);
+addBtn.addEventListener("click", addTask);
 
-taskInput.addEventListener(
-    "keydown",
-    event => {
-
-        if(
-            event.key === "Enter"
-        )
-        {
-            addTask();
-        }
-
+taskInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        addTask();
     }
-);
+});
 
 /* ===================================
    APPLICATION STARTUP
@@ -924,30 +499,16 @@ taskInput.addEventListener(
 refreshUI();
 
 /* ===================================
-   GLOBAL FUNCTIONS
+   GLOBAL FUNCTIONS (for inline onclick)
 =================================== */
 
-window.toggleTask =
-toggleTask;
-
-window.deleteTask =
-deleteTask;
-
-window.editTask =
-editTask;
+window.toggleTask = toggleTask;
+window.deleteTask = deleteTask;
+window.editTask = editTask;
 
 /* ===================================
-   DEBUG (OPTIONAL)
+   DEBUG
 =================================== */
 
-// Uncomment if needed
-
-/*
-console.log(
-    "TaskFlow Started"
-);
-
-console.log(
-    appData
-);
-*/
+console.log("✅ TaskFlow Application Started");
+console.log("📊 App Data:", appData);
