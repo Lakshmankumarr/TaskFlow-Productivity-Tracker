@@ -1,0 +1,112 @@
+/* ===================================
+   UPDATED INDEX.HTML - WITH USER INFO
+   Adds logout button and user profile
+=================================== */
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TaskFlow - A beautiful and functional productivity tracker to manage your daily tasks with achievements, streak tracking, and activity calendar">
+    <meta name="theme-color" content="#6366f1">
+    <title>TaskFlow - Productivity Tracker</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header with User Info -->
+        <header class="header" role="banner">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>TaskFlow</h1>
+                    <p>Productivity Tracker v2</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <span id="userName" class="user-name"></span>
+                        <button id="logoutBtn" class="logout-btn" aria-label="Logout button">🚪 Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Statistics Section -->
+        <section class="stats" role="region" aria-label="Dashboard Statistics">
+            <div class="card">
+                <h3>📋 Today's Tasks</h3>
+                <span id="totalTasks" aria-live="polite" aria-atomic="true">0</span>
+            </div>
+
+            <div class="card">
+                <h3>✅ Today's Completed</h3>
+                <span id="completedTasks" aria-live="polite" aria-atomic="true">0</span>
+            </div>
+
+            <div class="card">
+                <h3>⏳ Today's Pending</h3>
+                <span id="pendingTasks" aria-live="polite" aria-atomic="true">0</span>
+            </div>
+
+            <div class="card">
+                <h3>🔥 Current Streak</h3>
+                <span id="streakCount" aria-live="polite" aria-atomic="true">0</span>
+            </div>
+
+            <div class="card">
+                <h3>📈 Lifetime Tasks</h3>
+                <span id="lifetimeTasks" aria-live="polite" aria-atomic="true">0</span>
+            </div>
+
+            <div class="card">
+                <h3>🏆 Lifetime Completed</h3>
+                <span id="lifetimeCompleted" aria-live="polite" aria-atomic="true">0</span>
+            </div>
+        </section>
+
+        <!-- Achievements Section -->
+        <section class="badges-section" role="region" aria-label="Achievements">
+            <h2>Achievements</h2>
+            <div id="badgesContainer" aria-live="polite" aria-atomic="true"></div>
+        </section>
+
+        <!-- Task Form -->
+        <section class="task-form" role="region" aria-label="Add Task Form">
+            <input 
+                type="text" 
+                id="taskInput" 
+                placeholder="Enter task title" 
+                maxlength="200"
+                aria-label="Task input field"
+                autocomplete="off">
+            <button id="addBtn" aria-label="Add new task button">Add Task</button>
+        </section>
+
+        <!-- Task List -->
+        <section id="taskContainer" class="task-container" role="region" aria-label="Task List" aria-live="polite"></section>
+
+        <!-- Empty State -->
+        <section id="emptyState" class="empty-state" role="status" aria-live="polite">
+            <h2>No Tasks Yet</h2>
+            <p>Create your first task for today.</p>
+        </section>
+
+        <!-- Calendar Section -->
+        <section class="calendar-section" role="region" aria-label="Activity Calendar">
+            <h2>Activity Calendar</h2>
+            <div id="calendarContainer" role="presentation" aria-label="Monthly activity calendar"></div>
+        </section>
+
+        <!-- History Section -->
+        <section class="history-section" role="region" aria-label="Task History">
+            <h2>Task History</h2>
+            <div id="historyContainer" aria-live="polite" aria-atomic="true"></div>
+        </section>
+    </div>
+
+    <script src="script-updated.js"></script>
+</body>
+</html>
